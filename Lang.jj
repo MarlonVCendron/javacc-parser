@@ -1,0 +1,105 @@
+options {
+  //DEBUG_PARSER = true;
+  //DEBUG_TOKEN_MANAGER = true;
+  UNICODE_INPUT=true;
+  JAVA_UNICODE_ESCAPE = true;
+  static = false;
+}
+
+PARSER_BEGIN(Lang)
+
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.IOException;
+
+public class Lang {
+  public static void main(String args[]) throws ParseException{
+    try{
+      System.out.println("Lendo arquivo fonte");
+      FileInputStream fis = new FileInputStream(new File("fonte.txt"));
+      Lang parser = new Lang(fis);
+      parser.Start();
+      System.out.println("Arquivo fonte processado com sucesso");
+    } catch (IOException e) {
+      System.out.println("Erro");
+      System.exit(0);
+    }
+  }
+}
+
+PARSER_END(Lang)
+
+SKIP : { " " | "\t" | "\r" | "\n" | <"//" (~["\n", "\r"])*> | <"/*" (((~["*", "/"])* (~["/", "*"])*))* "*/">}
+
+TOKEN : {
+  <EOL : ";">
+}
+
+TOKEN : {
+  <#DIGIT : ["0"-"9"]> |
+  <#INTEGER : (<DIGIT>)+> |
+  <#BOOLEAN : ("true" | "false")> |
+  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "+", "-", "*", "/", "%", "^", "=", ",", " ", ";", "0"-"9"]> |
+  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "+", "-", "*", "/", "%", "^", "=", ",", " ", ";"]> |
+  <#UCHAR : ~["\u0000"-"\u001F", "\"", "\\"]>
+}
+
+TOKEN : {
+  <TYPE : (<INT> | <FLOAT> | <DOUBLE> | <STRING> | <BOOL>)> |
+  <#INT : "int"> |
+  <#FLOAT : "float"> |
+  <#DOUBLE : "double"> |
+  <#STRING : "string"> |
+  <#BOOL : "bool">
+}
+
+void IDR() : {} {
+  <LITERAL>(LOOKAHEAD(2) ","<LITERAL>)*
+} 
+
+void IDIR() : {} {
+  (<EXPRESSION> | <LITERAL>)(LOOKAHEAD(4) ","<LITERAL>"="(<EXPRESSION> | <LITERAL>))*
+} 
+
+void ID() : {} {
+  <TYPE><LITERAL>(","IDR() | "="IDIR())*<EOL>
+} 
+
+TOKEN : {
+  <#VALUE : 
+    <BOOLEAN> |
+    <NUMBER> |
+    "null" |
+    "\""(<UCHAR>)*"\""
+  > |
+  <#NUMBER : <INTEGER>("."<INTEGER>)?>
+}
+
+TOKEN : {
+  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*> |
+  <EXPRESSION : <BOOLEAN_EXPRESSION> | <ARITH_EXPRESSION>> |
+  <BOOLEAN_EXPRESSION : (<LITERAL> | <BOOLEAN>) <BOOLEAN_OP> (<LITERAL> | <BOOLEAN>)> |
+  <ARITH_EXPRESSION : (<LITERAL> | <NUMBER>) (<ARITH_OP> (<LITERAL> | <NUMBER>))*>
+}
+
+TOKEN : {
+  <BOOLEAN_OP : "<" | ">" | "==" | "<=" | ">=" | "!=" | "&&" | "||"> |
+  <ARITH_OP : "+" | "-" | "*" | "/" | "%" | "^">
+}
+
+void ASSIGNMENT() : {} {
+  <LITERAL>"="(<EXPRESSION> | <LITERAL>)<EOL>
+} 
+
+//void FOR() : {} {
+//  "for(" <EXPRESSION> ";" <EXPRESSION> ";" <EXPRESSION> "){" <??CODIGO??> "}"
+//}
+
+void Start() : {} {
+  (ID() | ASSIGNMENT())*
+  <EOF>
+} 
+
+
+
+

@@ -1,0 +1,13 @@
+// aaaa
+/*ab*/
+/* */
+
+int ඞ;
+string 😔sussus;
+int a, b, c=2, d;
+//string a="asdas", b, c=2, d;
+bool a = true;
+
+a = 4;
+b=null;
+cu = 5 + 5;
