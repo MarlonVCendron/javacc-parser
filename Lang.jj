@@ -19,7 +19,7 @@ public class Lang {
       FileInputStream fis = new FileInputStream(new File("fonte.txt"));
       Lang parser = new Lang(fis);
       parser.Start();
-      System.out.println("Arquivo fonte processado com sucesso");
+      System.out.println("🎉🎉🎉⭐️⭐️✨✨Arquivo fonte processado com sucesso");
     } catch (IOException e) {
       System.out.println("Erro");
       System.exit(0);
@@ -29,19 +29,29 @@ public class Lang {
 
 PARSER_END(Lang)
 
-SKIP : { " " | "\t" | "\r" | "\n" | <"//" (~["\n", "\r"])*> | <"/*" (((~["*", "/"])* (~["/", "*"])*))* "*/">}
-
-TOKEN : {
-  <EOL : ";">
+<*> SKIP: {
+  <" " | "\t" | "\r" | "\n" | "\r\n"> |
+  <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")> |
+  <"/*" (~["*"])* "*" (~["*","/"] (~["*"])* "*" | "*")* "/">
 }
 
 TOKEN : {
-  <#DIGIT : ["0"-"9"]> |
-  <#INTEGER : (<DIGIT>)+> |
-  <#BOOLEAN : ("true" | "false")> |
-  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "+", "-", "*", "/", "%", "^", "=", ",", " ", ";", "0"-"9"]> |
-  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "+", "-", "*", "/", "%", "^", "=", ",", " ", ";"]> |
-  <#UCHAR : ~["\u0000"-"\u001F", "\"", "\\"]>
+  <WS : " " | "\t"> |
+  <EOL : ";"> |
+  <SBOOLEAN_OP : "<" | ">" | "==" | "<=" | ">=" | "!="> |
+  <MBOOLEAN_OP : "&&" | "||"> |
+  <ARITH_OP : "+" | "-" | "*" | "/" | "%" | "^">
+}
+
+TOKEN : {
+  <IF : "if"> |
+  <ELSE : "else"> |
+  <ELSEIF : "elseif"> |
+  <FOR : "for"> |
+  <SCAN : "scan"> |
+  <PRINT : "print"> |
+  <RETURN : "return"> |
+  <FUNC : "func">
 }
 
 TOKEN : {
@@ -53,20 +63,29 @@ TOKEN : {
   <#BOOL : "bool">
 }
 
+TOKEN : {
+  <#DIGIT : ["0"-"9"]> |
+  <#INTEGER : (<DIGIT>)+> |
+  <#BOOLEAN : ("true" | "false")> |
+  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "*", "/", ",", " ", "=", ";", "0"-"9"]> |
+  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "*", "/", ",", " ", "=", ";"]> |
+  <#UCHAR : ~["\u0000"-"\u001F", "\"", "\\"]>
+}
+
 void IDR() : {} {
   <LITERAL>(LOOKAHEAD(2) ","<LITERAL>)*
 } 
 
 void IDIR() : {} {
-  (<EXPRESSION> | <LITERAL>)(LOOKAHEAD(4) ","<LITERAL>"="(<EXPRESSION> | <LITERAL>))*
+  (LOOKAHEAD(2) Expression() | <LITERAL>)(LOOKAHEAD(4) ","<LITERAL>"="(LOOKAHEAD(2) Expression() | <LITERAL>))*
 } 
 
 void ID() : {} {
-  <TYPE><LITERAL>(","IDR() | "="IDIR())*<EOL>
+  <TYPE> <LITERAL> (","IDR() | "="IDIR())*<EOL>
 } 
 
 TOKEN : {
-  <#VALUE : 
+  <VALUE : 
     <BOOLEAN> |
     <NUMBER> |
     "null" |
@@ -76,23 +95,48 @@ TOKEN : {
 }
 
 TOKEN : {
-  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*> |
-  <EXPRESSION : <BOOLEAN_EXPRESSION> | <ARITH_EXPRESSION>> |
-  <BOOLEAN_EXPRESSION : (<LITERAL> | <BOOLEAN>) <BOOLEAN_OP> (<LITERAL> | <BOOLEAN>)> |
-  <ARITH_EXPRESSION : (<LITERAL> | <NUMBER>) (<ARITH_OP> (<LITERAL> | <NUMBER>))*>
+  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*>
+  //<Expression : <booleanExpression> | <arithExpression>> |
+  //<booleanExpression : (<LITERAL> | <VALUE>) (<WS>)* <SBOOLEAN_OP> (<WS>)* (<LITERAL> | <VALUE>)> |
+  //<arithExpression : (<LITERAL> | <NUMBER>) (<WS>)* (<ARITH_OP> (<WS>)* (<LITERAL> | <NUMBER>))*>
 }
 
-TOKEN : {
-  <BOOLEAN_OP : "<" | ">" | "==" | "<=" | ">=" | "!=" | "&&" | "||"> |
-  <ARITH_OP : "+" | "-" | "*" | "/" | "%" | "^">
-}
+void Expression(): {} {
+  LOOKAHEAD(2) BooleanExpression() | ArithExpression()
+} 
+void BooleanExpression(): {} {
+  (<LITERAL> | <VALUE>) (<WS>)* <SBOOLEAN_OP> (<WS>)* (<LITERAL> | <VALUE>)
+} 
 
-void ASSIGNMENT() : {} {
-  <LITERAL>"="(<EXPRESSION> | <LITERAL>)<EOL>
+void ArithExpression (): {} {
+  (<LITERAL> | <VALUE>) (<WS>)* (<ARITH_OP> (<WS>)* (<LITERAL> | <VALUE>))*
+} 
+
+void ASSIGNMENT(): {} {
+  <LITERAL>"="(LOOKAHEAD(2) Expression() | <LITERAL>)<EOL>
 } 
 
 //void FOR() : {} {
-//  "for(" <EXPRESSION> ";" <EXPRESSION> ";" <EXPRESSION> "){" <??CODIGO??> "}"
+//  "for(" <Expression> ";" <Expression> ";" <Expression> "){" <??CODIGO??> "}"
+//}
+
+//void ifElseStatement(): {} {
+//  < IF > BooleanStructure() < THEN >
+//  (
+//    statement ()
+//  )*
+//  (
+//    < ELSEIF > BooleanStructure() < THEN >
+//    (
+//      statement ()
+//    )*
+//  )*
+//    < ELSE >
+//    (
+//      statement ()
+//    )*
+//
+//  < ENDIF >
 //}
 
 void Start() : {} {
