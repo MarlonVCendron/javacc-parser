@@ -11,3 +11,35 @@ bool a = true;
 a = 4;
 b=null;
 cu = 5      + 5   ;
+
+for(int x = 0; x < 5; x = x+ 1){}
+for(;;){}
+while (x > 2.3){
+  string teste = 1;
+}
+
+if(x < 3){
+  for(int x = 0; x < 5; x = x+ 1){
+    int bruh = x*2;
+    if (bruh < 10) {
+      sla = true;
+      break;
+    }
+  }
+}elseif  (2 >=  3)   {
+  
+} else {
+}
+
+func teste(int a, int b, string x = "22", int s) {
+  int x = 2;
+}
+
+func aa() {
+  int x = 2;
+  return aaaaaaaa;
+}
+
+aaa(1,23,x=4);
+
+scan();

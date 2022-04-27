@@ -30,9 +30,9 @@ public class Lang {
 PARSER_END(Lang)
 
 <*> SKIP: {
-  <" " | "\t" | "\r" | "\n" | "\r\n"> |
-  <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")> |
-  <"/*" (~["*"])* "*" (~["*","/"] (~["*"])* "*" | "*")* "/">
+  <SKIP_CHAR: " " | "\t" | "\r" | "\n" | "\r\n"> |
+  <SL_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")> |
+  <ML_COMMENT: "/*" (~["*"])* "*" (~["*","/"] (~["*"])* "*" | "*")* "/">
 }
 
 TOKEN : {
@@ -40,7 +40,7 @@ TOKEN : {
   <EOL : ";"> |
   <SBOOLEAN_OP : "<" | ">" | "==" | "<=" | ">=" | "!="> |
   <MBOOLEAN_OP : "&&" | "||"> |
-  <ARITH_OP : "+" | "-" | "*" | "/" | "%" | "^">
+  <ARITH_OP : "+" | "-" | "*" | "/" | "%" | "^" | "%">
 }
 
 TOKEN : {
@@ -48,6 +48,9 @@ TOKEN : {
   <ELSE : "else"> |
   <ELSEIF : "elseif"> |
   <FOR : "for"> |
+  <WHILE : "while"> |
+  <BREAK : "break"> |
+  <CONTINUE: "continue"> |
   <SCAN : "scan"> |
   <PRINT : "print"> |
   <RETURN : "return"> |
@@ -67,8 +70,8 @@ TOKEN : {
   <#DIGIT : ["0"-"9"]> |
   <#INTEGER : (<DIGIT>)+> |
   <#BOOLEAN : ("true" | "false")> |
-  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "*", "/", ",", " ", "=", ";", "0"-"9"]> |
-  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "*", "/", ",", " ", "=", ";"]> |
+  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "(", ")", "{", "}", "+", "-", "*", "/", "^", "%", ",", " ", "=", ";", "0"-"9"]> |
+  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "(", ")", "{", "}", "+", "-", "*", "/", "^", "%", ",", " ", "=", ";"]> |
   <#UCHAR : ~["\u0000"-"\u001F", "\"", "\\"]>
 }
 
@@ -81,7 +84,7 @@ void IDIR() : {} {
 } 
 
 void ID() : {} {
-  <TYPE> <LITERAL> (","IDR() | "="IDIR())*<EOL>
+  <TYPE> <LITERAL> (","IDR() | "="IDIR())*
 } 
 
 TOKEN : {
@@ -96,51 +99,93 @@ TOKEN : {
 
 TOKEN : {
   <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*>
-  //<Expression : <booleanExpression> | <arithExpression>> |
-  //<booleanExpression : (<LITERAL> | <VALUE>) (<WS>)* <SBOOLEAN_OP> (<WS>)* (<LITERAL> | <VALUE>)> |
-  //<arithExpression : (<LITERAL> | <NUMBER>) (<WS>)* (<ARITH_OP> (<WS>)* (<LITERAL> | <NUMBER>))*>
 }
 
 void Expression(): {} {
   LOOKAHEAD(2) BooleanExpression() | ArithExpression()
 } 
 void BooleanExpression(): {} {
-  (<LITERAL> | <VALUE>) (<WS>)* <SBOOLEAN_OP> (<WS>)* (<LITERAL> | <VALUE>)
+  (<LITERAL> | <VALUE>) <SBOOLEAN_OP> (<LITERAL> | <VALUE>)
 } 
 
 void ArithExpression (): {} {
-  (<LITERAL> | <VALUE>) (<WS>)* (<ARITH_OP> (<WS>)* (<LITERAL> | <VALUE>))*
+  (<LITERAL> | <VALUE>) (<ARITH_OP> (<LITERAL> | <VALUE>))*
 } 
 
-void ASSIGNMENT(): {} {
-  <LITERAL>"="(LOOKAHEAD(2) Expression() | <LITERAL>)<EOL>
+void Assignment(): {} {
+  <LITERAL>"="Expression()
 } 
 
-//void FOR() : {} {
-//  "for(" <Expression> ";" <Expression> ";" <Expression> "){" <??CODIGO??> "}"
-//}
+void For() : {} {
+  <FOR>"(" (ID())? <EOL> (BooleanExpression())? <EOL> (Assignment())? ")" "{"
+    (Statement())*
+  "}"
+}
 
-//void ifElseStatement(): {} {
-//  < IF > BooleanStructure() < THEN >
-//  (
-//    statement ()
-//  )*
-//  (
-//    < ELSEIF > BooleanStructure() < THEN >
-//    (
-//      statement ()
-//    )*
-//  )*
-//    < ELSE >
-//    (
-//      statement ()
-//    )*
-//
-//  < ENDIF >
-//}
+void While() : {} {
+  <WHILE>"("(BooleanExpression())?")" "{"
+    (Statement())*
+  "}"
+}
+
+void ParametersDefinition() : {} {
+  <TYPE> <LITERAL> ("," <TYPE> <LITERAL> ("=" Expression())?)*
+}
+
+void FunctionDefinition() : {} {
+  <FUNC> <LITERAL> "(" (ParametersDefinition())? ")" "{"
+    (Statement())*
+  "}"
+}
+
+void Parameters() : {} {
+  (LOOKAHEAD(2) <LITERAL>"=")? Expression() ("," Parameters())?
+}
+
+void FunctionName() : {} {
+  <LITERAL> | <SCAN> | <PRINT>
+}
+
+void Function() : {} {
+  FunctionName() "(" (Parameters())? ")"
+}
+
+void Return() : {} {
+  <RETURN> (Expression())? <EOL>
+}
+
+void IfElse() : {} {
+  <IF> "(" BooleanExpression() ")" "{"
+    (Statement())*
+  "}"
+  (
+    <ELSEIF> "(" BooleanExpression() ")" "{"
+      (Statement())*
+    "}"
+  )*
+  (
+    <ELSE> "{"
+      (Statement())*
+    "}"
+  )?
+}
+
+void Statement() : {} {
+  LOOKAHEAD(2)
+  Assignment()<EOL> |
+  Function() <EOL> |
+  ID()<EOL> |
+  For() |
+  IfElse() |
+  While() |
+  FunctionDefinition() |
+  Return() |
+  <BREAK><EOL> |
+  <CONTINUE><EOL>
+}
 
 void Start() : {} {
-  (ID() | ASSIGNMENT())*
+  (Statement())*
   <EOF>
 } 
 
