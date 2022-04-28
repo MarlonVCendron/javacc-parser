@@ -1,6 +1,6 @@
 options {
   //DEBUG_PARSER = true;
-  DEBUG_TOKEN_MANAGER = true;
+  //DEBUG_TOKEN_MANAGER = true;
   UNICODE_INPUT=true;
   JAVA_UNICODE_ESCAPE = true;
   static = false;
@@ -19,7 +19,7 @@ public class Lang {
       FileInputStream fis = new FileInputStream(new File("fonte.txt"));
       Lang parser = new Lang(fis);
       parser.Start();
-      System.out.println("🎉🎉🎉⭐️⭐️✨✨Arquivo fonte processado com sucesso");
+      System.out.println("⭐️⭐️⭐️✨✨Arquivo fonte processado com sucesso✨✨⭐️⭐️⭐️");
     } catch (IOException e) {
       System.out.println("Erro");
       System.exit(0);
@@ -86,7 +86,9 @@ void Value() : {} {
 }
 
 TOKEN : {
-  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*>
+  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*> |
+  <INCREMENT : <LITERAL>"++"> |
+  <DECREMENT : <LITERAL>"--">
 }
 
 void IDR() : {} {
@@ -94,7 +96,8 @@ void IDR() : {} {
 } 
 
 void IDIR() : {} {
-  (LOOKAHEAD(2) Expression() | <LITERAL>)(LOOKAHEAD(4) ","<LITERAL>"="(LOOKAHEAD(2) Expression() | <LITERAL>))*
+  (LOOKAHEAD(2) Expression() | LOOKAHEAD(2) Function() | <LITERAL>)
+  (LOOKAHEAD(4) ","<LITERAL>"="(LOOKAHEAD(2) Expression() | LOOKAHEAD(2) Function() | <LITERAL>))*
 } 
 
 void ID() : {} {
@@ -113,11 +116,11 @@ void ArithExpression (): {} {
 } 
 
 void Assignment(): {} {
-  <LITERAL>"="Expression()
+  <LITERAL> (<ARITH_OP>)? "="Expression()
 } 
 
 void For() : {} {
-  <FOR>"(" (ID())? <EOL> (BooleanExpression())? <EOL> (Assignment())? ")" "{"
+  <FOR>"(" (ID())? <EOL> (BooleanExpression())? <EOL> (Assignment() | <INCREMENT> | <DECREMENT>)? ")" "{"
     (Statement())*
   "}"
 }
@@ -185,6 +188,8 @@ void Statement() : {} {
   FunctionDefinition() |
   Return() |
   Import() |
+  <INCREMENT><EOL> |
+  <DECREMENT><EOL> |
   <BREAK><EOL> |
   <CONTINUE><EOL>
 }
@@ -193,7 +198,4 @@ void Start() : {} {
   (Statement())*
   <EOF>
 } 
-
-
-
 

@@ -1,47 +1,68 @@
-// aaaa
-/*ab*/
-/* */
+// Importação de bibliotecas
 
-#include "asdsadas";
+#include "biblioteca";
 
-int   ඞ;
-string 😔sussus;
+// Variáveis
+
+int inteiro;
+string texto;
+bool t = true;
+float π = 3.1415926535;
+string 日本語の表記体系 = "日本語の表記体系";
+int raio_🌎 = 6378000;
+string in = scan("Digite algo: ");
+
 int a, b, c=2, d;
-//string a="asdas", b, c=2, d;
-bool a = true;
+int x = 0, y = 0, z = 0;
 
 a = 4;
-b=null;
-cu = 5      + 5   ;
+b  = null;
+d = 5   + 5   *2*2*2^5;
 
-for(int x = 0; x < 5; x = x+ 1){}
-for(;;){}
-while (x > 2.3){
-  string teste = 1;
+
+// Loops
+
+for(;;){
+  /* Comentário */
 }
 
-if(x < 3){
-  for(int x = 0; x < 5; x = x+ 1){
-    int bruh = x*2;
-    if (bruh < 10) {
-      sla = true;
-      break;
+for(int x = 0; x < 5; x--){
+  break;
+}
+
+for(int x = 0; x < len; x+=2){
+  continue;
+}
+
+while (x < 100){
+  while (y < 100){
+    while (z < 100){
+      if(z == 1) {
+        print("123");
+      } elseif (z == 2) {
+        print(x);
+      } elseif (z == 3) {
+        print(z);
+      } else {
+        print("");
+      }
+      print(x, y, x);
+      z++;
     }
+    y++;
   }
-}elseif  (2 >=  3)   {
-  
-} else {
+  x++;
 }
+
+// Funções
 
 func teste(int a, int b, string x = "22", int s) {
-  int x = 2;
+  return a*b;
 }
 
-func aa() {
-  int x = 2;
-  return aaaaaaaa;
+func a(int b) {
+  int x = b*1000;
+  return x;
 }
 
 aaa(1,23,x=4);
-
-scan();
