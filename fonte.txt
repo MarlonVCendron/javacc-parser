@@ -2,6 +2,8 @@
 /*ab*/
 /* */
 
+#include "asdsadas";
+
 int   ඞ;
 string 😔sussus;
 int a, b, c=2, d;

@@ -1,6 +1,6 @@
 options {
   //DEBUG_PARSER = true;
-  //DEBUG_TOKEN_MANAGER = true;
+  DEBUG_TOKEN_MANAGER = true;
   UNICODE_INPUT=true;
   JAVA_UNICODE_ESCAPE = true;
   static = false;
@@ -54,7 +54,8 @@ TOKEN : {
   <SCAN : "scan"> |
   <PRINT : "print"> |
   <RETURN : "return"> |
-  <FUNC : "func">
+  <FUNC : "func"> |
+  <INCLUDE : "#include">
 }
 
 TOKEN : {
@@ -68,11 +69,24 @@ TOKEN : {
 
 TOKEN : {
   <#DIGIT : ["0"-"9"]> |
-  <#INTEGER : (<DIGIT>)+> |
-  <#BOOLEAN : ("true" | "false")> |
-  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "(", ")", "{", "}", "+", "-", "*", "/", "^", "%", ",", " ", "=", ";", "0"-"9"]> |
-  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "(", ")", "{", "}", "+", "-", "*", "/", "^", "%", ",", " ", "=", ";"]> |
+  <#START_CHAR:     ~["\u0000"-"\u001F", "\"", "\\", "(", ")", "{", "}", "+", "-", "*", "/", "^", "%", "#", ",", " ", "=", ";", "0"-"9"]> |
+  <#CONTINUE_CHAR : ~["\u0000"-"\u001F", "\"", "\\", "(", ")", "{", "}", "+", "-", "*", "/", "^", "%", "#", ",", " ", "=", ";"]> |
   <#UCHAR : ~["\u0000"-"\u001F", "\"", "\\"]>
+}
+
+TOKEN : {
+  <STRING_LITERAL : "\"" (<UCHAR>)* "\""> |
+  <BOOLEAN : ("true" | "false")> |
+  <INTEGER : (<DIGIT>)+> |
+  <NUMBER : <INTEGER>("."<INTEGER>)?>
+}
+
+void Value() : {} {
+  <BOOLEAN> | <INTEGER> | <NUMBER> | <STRING_LITERAL> | "null"
+}
+
+TOKEN : {
+  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*>
 }
 
 void IDR() : {} {
@@ -87,29 +101,15 @@ void ID() : {} {
   <TYPE> <LITERAL> (","IDR() | "="IDIR())*
 } 
 
-TOKEN : {
-  <VALUE : 
-    <BOOLEAN> |
-    <NUMBER> |
-    "null" |
-    "\""(<UCHAR>)*"\""
-  > |
-  <#NUMBER : <INTEGER>("."<INTEGER>)?>
-}
-
-TOKEN : {
-  <LITERAL : <START_CHAR>(<CONTINUE_CHAR>)*>
-}
-
 void Expression(): {} {
   LOOKAHEAD(2) BooleanExpression() | ArithExpression()
 } 
 void BooleanExpression(): {} {
-  (<LITERAL> | <VALUE>) <SBOOLEAN_OP> (<LITERAL> | <VALUE>)
+  (<LITERAL> | Value()) <SBOOLEAN_OP> (<LITERAL> | Value())
 } 
 
 void ArithExpression (): {} {
-  (<LITERAL> | <VALUE>) (<ARITH_OP> (<LITERAL> | <VALUE>))*
+  (<LITERAL> | Value()) (<ARITH_OP> (<LITERAL> | Value()))*
 } 
 
 void Assignment(): {} {
@@ -154,6 +154,10 @@ void Return() : {} {
   <RETURN> (Expression())? <EOL>
 }
 
+void Import() : {} {
+  <INCLUDE> <STRING_LITERAL> <EOL>
+}
+
 void IfElse() : {} {
   <IF> "(" BooleanExpression() ")" "{"
     (Statement())*
@@ -180,6 +184,7 @@ void Statement() : {} {
   While() |
   FunctionDefinition() |
   Return() |
+  Import() |
   <BREAK><EOL> |
   <CONTINUE><EOL>
 }
