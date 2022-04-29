@@ -111,7 +111,7 @@ void BooleanExpression(): {} {
 } 
 
 void ArithExpression (): {} {
-  (<LITERAL> | Value()) (<ARITH_OP> (<LITERAL> | Value()))*
+  (LOOKAHEAD(2) Function() | <LITERAL> | Value()) (<ARITH_OP> (LOOKAHEAD(2) Function() | <LITERAL> | Value()))*
 } 
 
 void Assignment(): {} {

@@ -66,3 +66,13 @@ func a(int b) {
 }
 
 aaa(1,23,x=4);
+
+func factorial(int n) {
+  if(n > 1) {
+    return n * factorial(n - 1);
+  } else {
+    return 1;
+  }
+}
+
+print(factorial(8));
